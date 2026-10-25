@@ -1,0 +1,6 @@
+
+'use strict';
+const fs=require('node:fs'),crypto=require('node:crypto'),path=require('node:path'),V=require('../desktop/verification.cjs');
+async function sign(file,version,privateKey,publicKey){const key=crypto.createPrivateKey(privateKey);if(key.asymmetricKeyType!=='ed25519'||V.keyId(crypto.createPublicKey(key))!==V.keyId(publicKey))throw Error('Update signing key does not match the embedded public key.');const artifact={name:path.basename(file),...await V.hashFile(file)},manifest={schema:1,appId:V.APP_ID,channel:'stable',version,tag:'v'+version,artifact};const envelope={manifest,keyId:V.keyId(publicKey),signature:crypto.sign(null,V.canonical(manifest),key).toString('base64')};const output=path.join(path.dirname(file),'release-manifest.json');fs.writeFileSync(output,JSON.stringify(envelope,null,2)+'\n');return output;}
+module.exports={sign};
+if(require.main===module){const cfg=require('../release-config.json'),version=require('../package.json').version,raw=process.env.UPDATE_SIGNING_KEY;if(!raw)throw Error('UPDATE_SIGNING_KEY must contain the base64 PKCS8 update key.');sign(path.resolve(process.argv[2]),version,Buffer.from(raw,'base64'),cfg.updatePublicKey).then(p=>console.log('Authenticated update manifest written: '+path.basename(p))).catch(()=>{console.error('Update signing failed. Check the protected release key.');process.exitCode=1;});}

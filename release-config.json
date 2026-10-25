@@ -3,5 +3,6 @@
   "repo": "personal-budget-tracker",
   "private": false,
   "publisherName": "",
-  "updatesEnabled": false
+  "updatesEnabled": true,
+  "updatePublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAZ473OBSG1goQ1PO+EaVPzCzytIPnkGN8eqILpR/qA0s=\n-----END PUBLIC KEY-----\n"
 }

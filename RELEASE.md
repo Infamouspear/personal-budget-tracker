@@ -2,32 +2,38 @@
 
 ## GitHub owner authorization
 
-Use GitHub Desktop → File → Add local repository, select this folder, then Publish repository as `Infamouspear/personal-budget-tracker`, public. If an empty repository already exists online, push the existing main branch to the configured origin. Do not initialize a separate README/history remotely. GitHub authentication occurs in GitHub Desktop; do not paste credentials into source or chat. No repository-creation connector is available in the current session, so this step requires the owner.
+Use GitHub Desktop → File → Add local repository, select this folder, then Publish repository as `Infamouspear/personal-budget-tracker`, public. Publishing through GitHub Desktop creates the origin remote. If an empty repository already exists online, set its URL in Repository settings and push the existing main branch. Do not initialize a separate README/history remotely. GitHub authentication occurs in GitHub Desktop; do not paste credentials into source or chat. No repository-creation connector is available in the current session, so this step requires the owner.
 
 Before pushing, run `npm test` and `node scripts/audit-history.cjs`. The complete initial history was audited before delivery. Only explicit source paths are committed. Never force-add ignored files. Tests use fictional figures and labels. Real browser exports, data files, screenshots, installer outputs, signing keys, credentials, personal configurations, and node_modules must remain outside Git history.
 
-## Code signing — required for secure updates
+## Update signing without a paid Windows certificate
 
-No certificate is available yet. The provided unsigned installer is a testing artifact, not a trusted signed release. Windows may display an unknown-publisher warning. Do not disable Windows security controls to distribute it. Secure updates remain disabled until a properly signed bootstrap installer has been manually installed.
+Ed25519 release authentication is now required for published releases. The app embeds only a public key; its private counterpart must remain outside the source repository. Set the base64 encoding of the PKCS8 private PEM as the protected GitHub `release` environment secret `UPDATE_SIGNING_KEY`. Never place it in a workflow file, repository variable, issue, chat, or release asset. The owner must transfer the private key into the secret through GitHub's secure settings and keep an offline recovery copy.
 
-Obtain an Authenticode code-signing certificate or configure a supported signing service. This release script currently supports an existing PFX-compatible certificate through electron-builder `CSC_LINK` and `CSC_KEY_PASSWORD`; modern hardware-backed certificates or Azure signing services require a corresponding signing-provider integration before use. Keep keys and passwords in a protected GitHub Actions release environment, never in this repository or packaged app. A self-signed certificate is insufficient for ordinary public distribution unless separately trusted by the recipient.
+The exact installer SHA-512, size, stable version, release tag, application ID, and artifact name are signed in release-manifest.json. That public manifest accompanies the installer and latest.yml. Missing, changed, wrongly signed, downgraded, or cross-application updates fail closed. GitHub metadata alone does not authorize an installer.
 
-Edit release-config.json with the exact certificate publisher subject, leave owner `Infamouspear`, repo `personal-budget-tracker`, private false, and set updatesEnabled true. Signature identity must remain compatible across releases. The release build requires signing secrets, forceCodeSigning, and pinned publisher identity; it fails rather than producing an unsigned release. The workflow additionally requires a valid Authenticode signature on the installer.
+No Windows certificate is currently available. Windows may show an unknown-publisher warning; cryptographic update signing does not create Windows publisher reputation or bypass OS policy. The first installer must come from a trusted source. The provided local installer embeds the initial public key.
+
+### Adding Windows signing later
+
+Keep the Ed25519 key and manifests. Add an Authenticode certificate or supported signing service, set publisherName to the exact signer identity, and configure signing credentials. The current release script supports PFX-compatible `CSC_LINK` and `CSC_KEY_PASSWORD`; hardware or cloud signing needs a matching provider integration. With publisherName configured, builds require Windows signing and updates must pass **both** Authenticode and Ed25519 checks. Do not replace either verifier with a no-op.
 
 ## Versioning and repeatable release
 
 1. Run npm ci and npm test; inspect the source and full-history audits.
-2. Configure the GitHub `release` environment with review protection and signing secrets.
+2. Configure the GitHub `release` environment with review protection and the UPDATE_SIGNING_KEY secret (plus Windows signing secrets if configured).
 3. Update the version with `npm version patch` (or minor/major as appropriate), producing a matching `vX.Y.Z` Git tag. Commit release-config changes before tagging.
-4. Push main and the version tag. The pinned GitHub Actions workflow installs locked dependencies, tests, audits complete history, builds signed NSIS, audits packaged app contents, and verifies the installer signature.
-5. It creates a **draft** GitHub Release containing only the installer, blockmap, and latest.yml. Review its files and publish the draft manually. Unsigned test builds are never automatically published.
+4. Push main and the version tag. The pinned GitHub Actions workflow installs locked dependencies, tests, audits complete history, builds NSIS, audits packaged app contents, and verifies Ed25519 installer authentication, plus Authenticode if configured.
+5. It creates a **draft** GitHub Release containing only the installer, blockmap, latest.yml, and release-manifest.json. Review its files and publish the draft manually. Builds lacking a valid Ed25519 release signature are never published by the workflow.
 
 Source is public and update downloads use public GitHub Releases, so users need no token. If releases ever become private, do not bundle a publisher token: the app supports a read-only token supplied for the current app session only, limited to Contents: Read on that repository. It is not saved in financial files, backups, logs, or local preferences.
 
 ## User-controlled updates
 
-Settings → About & Updates → Check for updates → Download update → Install & restart. There is no background check, automatic download, automatic install-on-quit, downgrade, or prerelease opt-in. Progress is displayed. electron-updater verifies SHA-512 and Windows Authenticode against the configured publisher. A failed check, interrupted download, or failed verification leaves the running app and financial data intact. Retry with Check for updates. Before installation a financial recovery copy must save successfully; otherwise installation is blocked.
+Settings → About & Updates → Check for updates → Download update → Install & restart. There is no background check, automatic download, automatic install-on-quit, downgrade, or prerelease opt-in. The release manifest is authenticated before enabling download. The full installer is checked after download, including cached downloads, and again immediately before installation. A recovery snapshot must save successfully before the app hands control to NSIS. Failed checks and interrupted downloads retain the running app and financial records.
 
-The unsigned 0.3.0 test build cannot securely bootstrap itself. Manually install the first signed version. Then test a second, higher signed version through published GitHub Releases before accepting production updating. Do not equate a manual installer upgrade with a verified live updater test.
+The pinned stable electron-updater has a supported custom Windows verification hook. This app uses it for Ed25519 installer authentication rather than accepting unsigned bytes. When Windows signing is added, the original Authenticode verifier is chained first. Differential and web installers are disabled to keep this path restricted to one fully authenticated NSIS installer.
 
-Official references: https://www.electronjs.org/docs/latest/tutorial/security ; https://www.electronjs.org/docs/latest/tutorial/fuses ; https://www.electron.build/v26/docs/features/auto-update/ ; https://www.electron.build/win.html .
+A live update from one published version to a higher published version remains a release acceptance requirement. The manual installer-upgrade test passed, but does not replace the live GitHub test. The repository has not yet been published by its owner.
+
+Official references: https://www.electron.build/v26/docs/win/ ; https://nodejs.org/api/crypto.html ; https://www.electronjs.org/docs/latest/tutorial/security .
