@@ -1,6 +1,6 @@
 {
   "name": "week-by-week-budget",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "description": "Manual personal budgeting with local financial data",
   "author": "Budget Tracker",
