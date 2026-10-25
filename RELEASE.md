@@ -34,6 +34,6 @@ Settings → About & Updates → Check for updates → Download update → Insta
 
 The pinned stable electron-updater has a supported custom Windows verification hook. This app uses it for Ed25519 installer authentication rather than accepting unsigned bytes. When Windows signing is added, the original Authenticode verifier is chained first. Differential and web installers are disabled to keep this path restricted to one fully authenticated NSIS installer.
 
-A live update from one published version to a higher published version remains a release acceptance requirement. The manual installer-upgrade test passed, but does not replace the live GitHub test. The repository has not yet been published by its owner.
+The public repository and releases 0.3.0/0.3.1 now exist. Real GitHub check/download, interruption recovery, signature/content verification, and tamper rejection passed against a fictional ledger. The remaining acceptance step is owner-controlled installation/restart in the actual desktop app and confirmation of unchanged records/balances. Do not describe that final step as passed until it is confirmed.
 
 Official references: https://www.electron.build/v26/docs/win/ ; https://nodejs.org/api/crypto.html ; https://www.electronjs.org/docs/latest/tutorial/security .

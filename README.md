@@ -4,7 +4,7 @@ A manual, local personal budget tracker. No bank integrations, transfers, cloud 
 
 ## Current delivery
 
-The per-user Windows x64 NSIS test installer is unsigned. It preserves the existing budgeting engine and transaction-history cleanup. Updates are authenticated using Ed25519 signatures and a public key embedded in the app. A paid Windows certificate is optional; without one Windows can still show an unknown-publisher warning. Public release target: `Infamouspear/personal-budget-tracker` on GitHub. The public source repository is published. Release assets and live updater acceptance are being prepared.
+The per-user Windows x64 NSIS test installer is unsigned. It preserves the existing budgeting engine and transaction-history cleanup. Updates are authenticated using Ed25519 signatures and a public key embedded in the app. A paid Windows certificate is optional; without one Windows can still show an unknown-publisher warning. Public release target: `Infamouspear/personal-budget-tracker` on GitHub. The public source repository and releases 0.3.0 and 0.3.1 are published. Live GitHub check/download, interruption recovery, and cryptographic verification passed with fictional data. The final desktop installation/restart confirmation remains an owner acceptance step.
 
 Install the test EXE, launch Week by Week Budget, then use **Restore backup** to import a JSON export from the earlier browser application. Import is manual; the desktop app does not read another browser's storage. Keep the original backup. Settings → About & Updates displays the installed version and local data location.
 

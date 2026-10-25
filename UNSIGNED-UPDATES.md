@@ -24,6 +24,6 @@ To use a different key before the first public release, run scripts/create-updat
 
 ## Remaining acceptance
 
-Local cryptographic tests and Windows installer-upgrade tests pass. The end-to-end public GitHub two-version update remains pending creation/publishing of the repository and release assets. No remote repository or release was created in this session. The installer remains a test build until that acceptance test passes.
+Local cryptographic tests and Windows installer-upgrade tests pass. Public releases 0.3.0 and 0.3.1 were built by GitHub Actions and independently audited. An actual public-feed updater integration test passed check/download, real cancellation and retry, manifest/installer verification, tampered-copy rejection, and unchanged fictional ledger hash. The test did not install an update. Final desktop Install & restart and record/balance confirmation remain an owner acceptance step.
 
 Sources: https://www.electron.build/v26/docs/win/ ; https://nodejs.org/api/crypto.html ; installed electron-updater 6.8.11 NsisUpdater.js and AppUpdater.js cache path.

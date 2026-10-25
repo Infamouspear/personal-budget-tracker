@@ -15,7 +15,11 @@
 
 ## Remaining release acceptance
 
-A real GitHub update from one published version to another cannot yet be tested because the repository has not yet been published by its owner. Ed25519 authentication now provides a secure alternative without a paid Windows certificate. A manual sequential-installer upgrade is a separate test and does not prove live updater authenticity or installation behavior. Complete that authenticated two-version test, including disconnect/retry and verification failure, before treating updating as production-ready.
+GitHub releases 0.3.0 and 0.3.1 are published. The tagged Windows workflows passed with zero annotations after moving pinned checkout/setup-node actions to Node 24. Both GitHub-built installers were independently checked against their tags, Ed25519 manifests, exact hashes/sizes, packaged source, privacy scans, update feed, and Electron fuses.
+
+A real electron-updater integration test (not a simulated network) used the public GitHub feed, current version 0.3.0, and an isolated fictional ledger. It authenticated 0.3.1, canceled a real download after progress began, recovered by checking/downloading again, verified the complete installer, rejected a deliberately modified copy, and retained the same ledger SHA-256. Automatic download/install-on-quit remained disabled, and installation was intentionally not invoked by the harness.
+
+Final owner acceptance is still required in the installed desktop app: manually approve Install & restart from 0.3.0, confirm version 0.3.1, and confirm records and balances remain unchanged. Keep a local backup first. The successful earlier manual installer-upgrade test is recorded separately and does not substitute for this app-level live updater check.
 
 Manual acceptance should also cover the native backup file picker, Windows SmartScreen/signature experience, and installation on a separate clean Windows account/machine. Never test by importing a real financial backup into public CI or publishing a screenshot of a real budget.
 
