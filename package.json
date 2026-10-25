@@ -1,0 +1,23 @@
+{
+  "name": "week-by-week-budget",
+  "version": "0.3.0",
+  "private": true,
+  "description": "Manual personal budgeting with local financial data",
+  "author": "Budget Tracker",
+  "main": "desktop/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "test": "node scripts/test.cjs",
+    "dist": "node scripts/build.cjs test",
+    "release:build": "node scripts/build.cjs release",
+    "audit:source": "node scripts/audit-source.cjs"
+  },
+  "dependencies": {
+    "electron-updater": "6.8.11"
+  },
+  "devDependencies": {
+    "electron": "45.0.0",
+    "electron-builder": "26.18.0",
+    "@electron/fuses": "2.1.3"
+  }
+}
