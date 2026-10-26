@@ -61,4 +61,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create $env:GITHUB_REF_NAME dist/*Setup*.exe dist/*.blockmap dist/latest.yml dist/release-manifest.json --draft --verify-tag --title "Budget Tracker $env:GITHUB_REF_NAME" --notes 'Cryptographically authenticated Windows installer. Financial data stays on your device.'
+          gh release create $env:GITHUB_REF_NAME dist/*Setup*.exe dist/*.blockmap dist/latest.yml dist/release-manifest.json --draft --verify-tag --title "Alloc $env:GITHUB_REF_NAME" --notes 'Cryptographically authenticated Windows installer. Financial data stays on your device.'

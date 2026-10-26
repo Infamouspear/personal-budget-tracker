@@ -12,7 +12,7 @@ Some online electron-builder documentation describes signed manifests in the unr
 
 The initial app contains a pinned Ed25519 public key. Public GitHub Releases host a signed release-manifest.json alongside latest.yml and the installer. The manifest binds schema, stable channel, app ID, exact newer version/tag, artifact name, size, and SHA-512. The app accepts only the configured public GitHub repository's manifest URL with bounded HTTPS redirects and a small response limit. Public keys are never fetched from the update server.
 
-Missing/invalid signatures, changed installer bytes, wrong keys, wrong app/channel/version, lower/equal versions, and unexpected artifacts are blocked. No check, download, or installation is automatic; users approve each stage. Failed updates leave financial records alone. A recovery snapshot is required before installation.
+Missing/invalid signatures, changed installer bytes, wrong keys, wrong app/channel/version, lower/equal versions, and unexpected artifacts are blocked. Checks run automatically; downloading and installation require explicit approval. Failed updates leave financial records alone. A recovery snapshot is required before installation.
 
 This protects against malicious replacement of release assets without the private signing key. It does not make an already-compromised Windows account safe, establish the human publisher's identity to Windows, prevent a server from withholding updates, or authenticate an initial installer obtained from an untrusted source. Windows can still warn about unknown publishers. The initial installer should be distributed through the owner's trusted channel, with its hash verified independently when practical.
 
@@ -22,8 +22,8 @@ The private key was generated outside the repository and restricted to the curre
 
 To use a different key before the first public release, run scripts/create-update-key.cjs with a new external directory, secure the resulting private file, update all bootstrap installers, and rerun the complete audit and verification tests. Do not regenerate keys casually after distributing the app.
 
-## Remaining acceptance
+## Acceptance status
 
-Local cryptographic tests and Windows installer-upgrade tests pass. Public releases 0.3.0 and 0.3.1 were built by GitHub Actions and independently audited. An actual public-feed updater integration test passed check/download, real cancellation and retry, manifest/installer verification, tampered-copy rejection, and unchanged fictional ledger hash. The test did not install an update. The owner confirmed the public desktop installation/restart with an empty profile. V0.4 tests populated fictional data and silent installation locally; production-release acceptance remains pending. See V1-READINESS.md.
+The owner confirmed V0.4 public updates, notifications, silent installation/relaunch, populated-data preservation and recovery backups. V1.0 rebrands the app as Alloc while preserving the key, internal storage/executable identity, repository and legacy update artifact name. The Alloc manual installer is an identical alias. Final V0.4.1 → V1.0.0 live acceptance follows explicit publication approval; see V1-READINESS.md.
 
 Sources: https://www.electron.build/v26/docs/win/ ; https://nodejs.org/api/crypto.html ; installed electron-updater 6.8.11 NsisUpdater.js and AppUpdater.js cache path.

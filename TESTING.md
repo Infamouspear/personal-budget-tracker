@@ -1,26 +1,19 @@
-# Desktop acceptance testing
+# Alloc V1.0 verification
 
-## Passed
+## Owner-confirmed V0.4 results
+PASS: core budgeting regressions, clean setup, JSON backup/restore, Windows installer, public GitHub updates, automatic notifications, silent installation/relaunch, financial-data preservation, and pre-update recovery backups.
 
-- Eleven existing browser-engine/form regression suites passed before the desktop wrapper was introduced. V0.4 preserves those calculation paths and adds a validated backup-format reader for pre-update recovery snapshots.
-- Public desktop tests use fictional data and verify allocation percentages, rollover, negative categories, debit/credit, old debt and repayments, recurring payments/transfers/skips, reimbursements, history filters/deletion/restoration/purge, and JSON roundtrip.
-- Durable desktop storage tests cover validated import, restart, previous-copy preservation, invalid JSON/key rejection, interrupted temporary write, and corrupt-primary refusal.
-- Updater state tests cover manual check/download/install, progress, private session credentials, interrupted downloads and retries, fail-closed missing-trust configuration, and refusal to install when a recovery backup cannot be saved. These use a simulated updater, not a live signed release.
-- An actual NSIS per-user x64 installer completed with exit code 0 in an isolated test directory. The installed app launched a fresh profile, rendered the budget, and exposed About & Updates.
-- Runtime reported sandbox=true, contextIsolation=true, nodeIntegration=false, and require unavailable in the renderer.
-- The installed app loaded a fictional JSON backup into its isolated data store and rendered the expected accounts/history; the next process launch, without reimport, produced identical output. Browser backup selection/confirmation is covered by the earlier form tests; native file-picker interaction remains a manual acceptance step.
-- Production dependency audit: zero known vulnerabilities at time of build.
+Earlier testing included a populated fictional installed-app upgrade with identical storage SHA-256 and rendered accounts/history; recovery and exported JSON restored into separate fictional profiles. These tests never require a real backup in CI.
 
-- Actual NSIS sequential upgrade from test 0.3.0 to test 0.3.1 passed. The persisted ledger SHA-256 was unchanged, and the installed higher version rendered the expected fictional accounts/history. Uninstalling the test installation retained its isolated financial files.
+## Automated suites
+Run npm test. Suites cover allocations/rollover/negative funds, cards and repayment without double-counting, recurring bills/transfers/skips/reimbursements, history restoration/purge dependencies, durable storage and interrupted writes, validated backups, notifications and navigation/reminders/offline behavior, startup profile isolation, safe update status, signatures/keys/version binding, cached-installer tampering, and downgrade rejection.
 
-## Remaining release acceptance
+Production package audits reject test-profile metadata, records, backups, private keys, and test files. Source and complete reachable history are audited separately. Release artifacts are independently checked against their Git tag, pinned key, update feed, installer hash/size, source, and Electron fuses.
 
-GitHub releases 0.3.0 and 0.3.1 are published. The tagged Windows workflows passed with zero annotations after moving pinned checkout/setup-node actions to Node 24. Both GitHub-built installers were independently checked against their tags, Ed25519 manifests, exact hashes/sizes, packaged source, privacy scans, update feed, and Electron fuses.
+## V1.0 branding compatibility
+The internal application ID, executable name, storage folder, repository and key remain stable. Only visible product/shortcut labels change to Alloc. Test the old-branded → Alloc upgrade in a separate Windows test identity with fictional balances, bills, settings and history. Verify one installation registration, old shortcuts replaced by Alloc shortcuts, the same directory, silent relaunch, stable records and restored backups.
 
-A real electron-updater integration test (not a simulated network) used the public GitHub feed, current version 0.3.0, and an isolated fictional ledger. It authenticated 0.3.1, canceled a real download after progress began, recovered by checking/downloading again, verified the complete installer, rejected a deliberately modified copy, and retained the same ledger SHA-256. Automatic download/install-on-quit remained disabled, and installation was intentionally not invoked by the harness.
+The legacy update installer and Alloc manual installer must be byte-identical; the manifest/latest.yml retain the legacy artifact name required by V0.4.1.
 
-The owner confirmed the public 0.3.0 → 0.3.1 installation/restart. That profile was empty, so financial-data preservation was not verified by the live test. V0.4 adds a separate populated installed-app silent-update regression. See V1-READINESS.md for evidence, limitations, and outstanding acceptance; no V0.4 release is published.
-
-Manual acceptance should also cover the native backup file picker, Windows SmartScreen/signature experience, and installation on a separate clean Windows account/machine. Never test by importing a real financial backup into public CI or publishing a screenshot of a real budget.
-
-Ed25519 tests pass for valid signatures, wrong keys, tampered manifests, app/version binding, rollback rejection, installer hash/size mismatch, cached download revalidation, mutation before installation, and chaining a future Authenticode verifier.
+## Final acceptance
+The real V0.4.1 → V1.0.0 GitHub upgrade is performed only after explicit publication approval. Follow V1-READINESS.md. Do not publish financial exports or screenshots. Power-loss/disk-full executable rollback on a separate VM remains unverified and is documented as a limitation.
