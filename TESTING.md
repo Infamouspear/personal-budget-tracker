@@ -2,7 +2,7 @@
 
 ## Passed
 
-- Eleven existing browser-engine/form regression suites passed before the desktop wrapper was introduced. The budgeting engine is byte-identical between the validated browser build and desktop source.
+- Eleven existing browser-engine/form regression suites passed before the desktop wrapper was introduced. V0.4 preserves those calculation paths and adds a validated backup-format reader for pre-update recovery snapshots.
 - Public desktop tests use fictional data and verify allocation percentages, rollover, negative categories, debit/credit, old debt and repayments, recurring payments/transfers/skips, reimbursements, history filters/deletion/restoration/purge, and JSON roundtrip.
 - Durable desktop storage tests cover validated import, restart, previous-copy preservation, invalid JSON/key rejection, interrupted temporary write, and corrupt-primary refusal.
 - Updater state tests cover manual check/download/install, progress, private session credentials, interrupted downloads and retries, fail-closed missing-trust configuration, and refusal to install when a recovery backup cannot be saved. These use a simulated updater, not a live signed release.
@@ -19,7 +19,7 @@ GitHub releases 0.3.0 and 0.3.1 are published. The tagged Windows workflows pass
 
 A real electron-updater integration test (not a simulated network) used the public GitHub feed, current version 0.3.0, and an isolated fictional ledger. It authenticated 0.3.1, canceled a real download after progress began, recovered by checking/downloading again, verified the complete installer, rejected a deliberately modified copy, and retained the same ledger SHA-256. Automatic download/install-on-quit remained disabled, and installation was intentionally not invoked by the harness.
 
-Final owner acceptance is still required in the installed desktop app: manually approve Install & restart from 0.3.0, confirm version 0.3.1, and confirm records and balances remain unchanged. Keep a local backup first. The successful earlier manual installer-upgrade test is recorded separately and does not substitute for this app-level live updater check.
+The owner confirmed the public 0.3.0 → 0.3.1 installation/restart. That profile was empty, so financial-data preservation was not verified by the live test. V0.4 adds a separate populated installed-app silent-update regression. See V1-READINESS.md for evidence, limitations, and outstanding acceptance; no V0.4 release is published.
 
 Manual acceptance should also cover the native backup file picker, Windows SmartScreen/signature experience, and installation on a separate clean Windows account/machine. Never test by importing a real financial backup into public CI or publishing a screenshot of a real budget.
 

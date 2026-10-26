@@ -24,6 +24,6 @@ To use a different key before the first public release, run scripts/create-updat
 
 ## Remaining acceptance
 
-Local cryptographic tests and Windows installer-upgrade tests pass. Public releases 0.3.0 and 0.3.1 were built by GitHub Actions and independently audited. An actual public-feed updater integration test passed check/download, real cancellation and retry, manifest/installer verification, tampered-copy rejection, and unchanged fictional ledger hash. The test did not install an update. Final desktop Install & restart and record/balance confirmation remain an owner acceptance step.
+Local cryptographic tests and Windows installer-upgrade tests pass. Public releases 0.3.0 and 0.3.1 were built by GitHub Actions and independently audited. An actual public-feed updater integration test passed check/download, real cancellation and retry, manifest/installer verification, tampered-copy rejection, and unchanged fictional ledger hash. The test did not install an update. The owner confirmed the public desktop installation/restart with an empty profile. V0.4 tests populated fictional data and silent installation locally; production-release acceptance remains pending. See V1-READINESS.md.
 
 Sources: https://www.electron.build/v26/docs/win/ ; https://nodejs.org/api/crypto.html ; installed electron-updater 6.8.11 NsisUpdater.js and AppUpdater.js cache path.

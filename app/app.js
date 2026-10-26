@@ -131,7 +131,7 @@ $('form').onsubmit=e=>{e.preventDefault();try{
  function download(d,name){const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
  $('export').onclick=()=>download(data,`week-by-week-${today()}.json`);
  $('recovery').onclick=()=>{const raw=localStorage.getItem(KEY+'-before-entry-delete')||localStorage.getItem(KEY+'-before-payday-delete')||localStorage.getItem(KEY+'-before-setup')||localStorage.getItem(KEY+'-before-corrections');if(raw)download(JSON.parse(raw),`week-by-week-before-setup-${today()}.json`);else alert('No migration/setup recovery copy yet. Export your current backup instead.');};
- $('restore').onchange=async e=>{try{const file=e.target.files[0];if(!file)return;pendingBackup=B.validate(B.migrate(B.suppressPurged(JSON.parse(await file.text()),data.purgedIds||[])));open('restore');}catch(err){alert('Backup could not be restored: '+err.message);}finally{e.target.value='';}};
+ $('restore').onchange=async e=>{try{const file=e.target.files[0];if(!file)return;pendingBackup=B.readBackup(await file.text(),data.purgedIds||[]);open('restore');}catch(err){alert('Backup could not be restored: '+err.message);}finally{e.target.value='';}};
 
 $('historyType').innerHTML+=Object.entries(titles).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join('');
 $('historyCategory').innerHTML+=Object.entries(names).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join('');
