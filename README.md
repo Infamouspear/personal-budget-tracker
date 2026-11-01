@@ -3,8 +3,13 @@
 
 Alloc is a manual personal budget tracker for Windows, built for fluctuating paychecks, recurring bills, rollover funds, savings, and debt repayment. It was previously named Week by Week Budget. V1.0 stabilizes the existing app without new budgeting features or a financial-data migration.
 
+## V1.0.1 fund shortfalls
+Art, Fun, Essentials, and Old Debt Payoff show the amount available to spend or allocate as their main number. Negative balances show $0.00 with a smaller shortfall label. The signed allocation balance and negative rollover remain intact in fund details.
+
+Use View Details → Resolve Shortfall to reassign positive earmarks from another category, or explicitly clear using Unallocated and genuinely unused cash backing when permitted. This records a budget-only history entry; it does not change account balances, card debt, bill/repayment reserves, income, or expenses. Resolution is limited to the current shortfall, so it cannot create a positive spending allowance. The entry supports edit, undo, delete and restore. Existing JSON backups still import; backups containing the new rebalance entries require Alloc 1.0.1 or later.
+
 ## Install or upgrade
-Download **Alloc-Setup-1.0.0.exe** from the [GitHub Releases](https://github.com/Infamouspear/personal-budget-tracker/releases) once V1.0 is published. Fresh installation is interactive and per-user. Existing V0.4.1 users should update through Settings → About & Updates; installation stays in the existing folder. The Start Menu and desktop shortcuts become Alloc.
+Download the **Alloc-Setup** EXE for the latest published version from [GitHub Releases](https://github.com/Infamouspear/personal-budget-tracker/releases). Fresh installation is interactive and per-user. Existing users should update through Settings → About & Updates; installation stays in the existing folder.
 
 The repository, application ID, data directory, executable identity, and Ed25519 key stay unchanged. The legacy Week-by-Week-Budget-Setup filename remains in the update feed because earlier versions require it. The Alloc-named installer is an identical copy for manual installation, not a second application.
 

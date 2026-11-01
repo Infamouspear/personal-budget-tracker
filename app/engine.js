@@ -1,6 +1,7 @@
 (function(root){
 'use strict';
 const funds=['essentials','savings','art','fun','cushion','debt'];
+const shortfallFunds=['art','fun','essentials','debt'];
 const cardNames={amazon:'Amazon Visa',paypal:'PayPal Credit',legacy:'Unassigned legacy card'};
 const safeId=x=>typeof x==='string'&&/^[a-zA-Z0-9-]+$/.test(x)&&!['constructor','prototype'].includes(x);
 function money(n){if(typeof n!=='number'||!Number.isSafeInteger(n)||n<0)throw Error('Amounts must be nonnegative whole cents.');return n;}
@@ -36,6 +37,7 @@ function apply(s,e){
  }else if(e.type==='reconcile'){
  let dc,ds;if(e.deltaChecking!==undefined){dc=signed(e.deltaChecking);ds=signed(e.deltaSavings);}else{dc=money(e.checking)-s.checking;ds=money(e.savingsAccount)-s.savingsAccount;}
  const delta=dc+ds;if(delta<0)debit(s.funds,'cushion',-delta);else s.funds.cushion+=delta;s.checking+=dc;s.savingsAccount+=ds;
+ }else if(e.type==='fundRebalance'){resolveFund(s,e);
  }else if(e.type==='billSkip'){if(a!==0)throw Error('A skipped cycle cannot move money.');
  }else if(e.type==='releaseBill'){debit(s.bills,e.billId,a);s.funds.cushion+=a;}
  else throw Error('Unknown transaction type.');
@@ -53,7 +55,7 @@ function migrateV4(input){const d=input.revision===4?structuredClone(input):migr
 function suppressPurged(input,extra=[]){const d=structuredClone(input),ids=[...new Set([...(d.purgedIds||[]),...extra])];if(ids.some(id=>!safeId(id)))throw Error('Invalid permanently deleted record ID.');d.purgedIds=ids;d.events=d.events.filter(e=>!ids.includes(e.id));if(d.undo?.before)d.undo.before=suppressPurged(d.undo.before,ids);return d;}
 function migrate(input){const d=[5,6].includes(input?.revision)?structuredClone(input):migrateV4(input);d.revision=6;return suppressPurged(d);}
 function permanentlyDelete(input,ids){if(!Array.isArray(ids)||!ids.length)throw Error('Select deleted entries first.');const selected=new Set(ids);for(const id of selected){const e=input.events.find(e=>e.id===id);if(!e||!e.deleted)throw Error('Only previously deleted entries can be permanently deleted.');}const before=JSON.stringify(replay(input)),totalsBefore=JSON.stringify(totals(input)),schedules=JSON.stringify(scheduledBills(input));const d=suppressPurged(input,[...selected]);delete d.undo;d.revision=6;validate(d);if(JSON.stringify(replay(d))!==before||JSON.stringify(totals(d))!==totalsBefore||JSON.stringify(scheduledBills(d))!==schedules)throw Error('Cleanup would change financial records; nothing was removed.');return d;}
-function entryCategories(e){const keys=new Set(e.category?[e.category]:[]);if(e.type==='payday'){for(const [k,n] of Object.entries(e.allocations||{}))if(n)keys.add(k);const remainder=e.amount-Object.values(e.allocations||{}).reduce((a,b)=>a+b,0)-Object.values(e.billAllocations||{}).reduce((a,b)=>a+b,0);if(remainder>0)keys.add(e.remainderDestination==='unallocated'?'unallocated':'cushion');}if(e.type==='billTransfer')keys.add('savings');if(e.type==='cardPayment'&&e.old)keys.add(e.source||'debt');return [...keys];}
+function entryCategories(e){const keys=new Set(e.category?[e.category]:[]);if(e.type==='fundRebalance'){if(funds.includes(e.source))keys.add(e.source);else if(e.unallocatedUsed)keys.add('unallocated');}if(e.type==='payday'){for(const [k,n] of Object.entries(e.allocations||{}))if(n)keys.add(k);const remainder=e.amount-Object.values(e.allocations||{}).reduce((a,b)=>a+b,0)-Object.values(e.billAllocations||{}).reduce((a,b)=>a+b,0);if(remainder>0)keys.add(e.remainderDestination==='unallocated'?'unallocated':'cushion');}if(e.type==='billTransfer')keys.add('savings');if(e.type==='cardPayment'&&e.old)keys.add(e.source||'debt');return [...keys];}
 function historyEntries(d,filters={}){const q=(filters.search||'').trim().toLowerCase(),amountQuery=q.replace(/[$,\s]/g,'');return ordered(d,true).filter(e=>{if((filters.status||'active')==='active'&&e.deleted||filters.status==='deleted'&&!e.deleted)return false;if(filters.type&&e.type!==filters.type||filters.category&&!entryCategories(e).includes(filters.category)||filters.from&&(e.date||'')<filters.from||filters.to&&(e.date||'')>filters.to)return false;const bill=d.bills.find(b=>b.id===e.billId),text=[e.description,e.billName,bill?.name,e.reason].filter(Boolean).join(' ').toLowerCase();const n=e.type==='debtAdjustment'?e.delta:e.amount;return !q||text.includes(q)||typeof n==='number'&&(Math.abs(n)/100).toFixed(2).includes(amountQuery);}).reverse();}
 function transactionEffects(d,id){const e=d.events.find(e=>e.id===id);if(!e)throw Error('Entry not found.');if(d.initial&&e.initialization)return {inactive:true,changes:[],explanation:'Replaced by Initial Financial Setup; no current financial effect.'};try{const view={...d,events:d.events.map(x=>x.id===id?{...x,deleted:false}:x)},before=replay(beforeData(view,id,e.date)),after=structuredClone(before);apply(after,e);const changes=[];const add=(label,a,b)=>{if(a!==b)changes.push({label,delta:b-a});};add('Checking',before.checking,after.checking);add('Savings account',before.savingsAccount,after.savingsAccount);add('Unallocated',before.unallocated,after.unallocated);for(const k of funds)add('Fund: '+k,before.funds[k],after.funds[k]);for(const k of new Set([...Object.keys(before.bills),...Object.keys(after.bills)]))add('Bill reserve: '+(d.bills.find(b=>b.id===k)?.name||k),before.bills[k]||0,after.bills[k]||0);for(const k of Object.keys(cardNames))for(const field of ['old','new','reserve'])add(cardNames[k]+' '+field,before.cards[k][field],after.cards[k][field]);return {inactive:!!e.deleted,changes,explanation:e.type==='billSkip'?'Scheduling only; no money or debt moved.':e.deleted?'Deleted: no current effect. Below are the original recorded effects if applicable.':'Effects of this recorded entry; category movements are allocations, not additional expenses.'};}catch(error){return {inactive:!!e.deleted,changes:[],explanation:'Effects cannot currently be replayed: '+error.message};}}
 
@@ -80,11 +82,30 @@ function warnings(s){const out=[];for(const [k,n] of Object.entries(s.funds))if(
 function deletePayday(input,id){const d=structuredClone(input),e=d.events.find(e=>e.id===id);if(!e||e.type!=='payday'||e.deleted)throw Error('Choose an active payday.');e.deleted=true;validate(d);return d;}
 function restorePayday(input,id){const d=structuredClone(input),e=d.events.find(e=>e.id===id);if(!e||e.type!=='payday'||!e.deleted)throw Error('Choose a deleted payday.');delete e.deleted;validate(d);return d;}
 function fundBalance(s,key){if(key.startsWith('bill:'))return s.bills[key.slice(5)]||0;if(key==='unallocated')return s.unallocated||0;if(key==='card')return s.cardReserve;if(key==='bills')return Object.values(s.bills).reduce((a,b)=>a+b,0);return s.funds[key];}
+function fundDisplay(s,key){const balance=fundBalance(s,key),supported=shortfallFunds.includes(key);return {balance,available:supported?Math.max(0,balance):balance,shortfall:supported?Math.max(0,-balance):0};}
+function resolveFund(s,e){
+ const n=money(e.amount);if(!shortfallFunds.includes(e.category)||!n||s.funds[e.category]>=0||n> -s.funds[e.category])throw Error('Choose a fund with a shortfall and an amount no greater than that shortfall.');
+ const next=structuredClone(s),before=cashBacking(s);
+ if(e.source==='unassigned'){
+ const allocated=money(e.unallocatedUsed),unused=money(e.freeCashUsed);if(allocated+unused!==n||allocated>Math.max(0,s.unallocated)||unused>Math.max(0,free(s)))throw Error('Insufficient unassigned cash backing. Recheck the amount or select another category.');
+ next.unallocated-=allocated;next.funds[e.category]+=n;const backing=cashBacking(next);if(next.checking<0||next.savingsAccount<0||backing.totalShortfall||backing.checkingShortfall)throw Error('The shortfall cannot be cleared while earmarks lack cash backing. Rebalance another category or reconcile actual cash first.');
+ }else{
+ if(!funds.includes(e.source)||e.source===e.category||n>Math.max(0,s.funds[e.source]))throw Error('The source category must have enough positive allocation. Bill and card reserves cannot be used.');
+ next.funds[e.source]-=n;next.funds[e.category]+=n;
+ }
+ const after=cashBacking(next);if(after.totalShortfall>before.totalShortfall||after.checkingShortfall>before.checkingShortfall||total(next)>next.checking+next.savingsAccount)throw Error('This rebalance would exceed available cash backing.');
+ Object.assign(s,next);
+}
+function makeFundRebalance(d,{id,category,source,amount,day,description}){
+ const s=stateBefore(d,id,day),e={id,type:'fundRebalance',category,source,amount:money(amount),date:date(day),description:description||'Resolve fund shortfall'};
+ if(source==='unassigned'){e.unallocatedUsed=Math.min(amount,Math.max(0,s.unallocated));e.freeCashUsed=amount-e.unallocatedUsed;}
+ resolveFund(s,e);return e;
+}
 function fundHistory(d,key){const state=replay({...d,events:[]});let prior=fundBalance(state,key);const rows=[{type:'initialSetup',date:d.initial?.date||'',delta:prior,balance:prior}];for(const e of ordered(d)){if(d.initial&&e.initialization)continue;apply(state,e);const n=fundBalance(state,key);if(n!==prior||e.type==='billSkip'&&(key==='bills'||key==='bill:'+e.billId)||e.type==='purchase'&&e.category===key||e.type==='payday'&&Object.hasOwn(e.allocations,key))rows.push({...e,delta:n-prior,balance:n});prior=n;}return rows;}
 
 
 
-const deletable=['payday','purchase','billPayment','billTransfer','cardPayment','transfer','reimbursement','reconcile','debtAdjustment','billSkip'];
+const deletable=['payday','purchase','billPayment','billTransfer','cardPayment','transfer','reimbursement','reconcile','debtAdjustment','billSkip','fundRebalance'];
 function deleteTransaction(input,id){const d=structuredClone(input),e=d.events.find(e=>e.id===id);if(!e||!deletable.includes(e.type)||e.deleted)throw Error('Choose an active transaction.');const linked=d.events.filter(r=>!r.deleted&&r.type==='reimbursement'&&r.paymentId===id);if(linked.length)throw Error('This expense has linked reimbursements. Delete or reassign those receipt entries first; they will not be removed automatically.');e.deleted=true;validate(d);return d;}
 function restoreTransaction(input,id){const d=structuredClone(input),e=d.events.find(e=>e.id===id);if(!e||!e.deleted)throw Error('Choose a deleted transaction.');delete e.deleted;validate(d);return d;}
 function scheduleKey(b){return b.scheduleId||'schedule-'+b.id;}
@@ -98,5 +119,5 @@ function upcomingBills(d,day){date(day);return needs(scheduledBills(d),replay(d)
 function makeSkip(d,{billId,due,day,reason,id}){const old=id?d.events.find(e=>e.id===id&&e.type==='billSkip'):null,b=d.bills.find(b=>b.id===billId);const sameCycle=old&&old.billId===billId&&old.cycle.due===due;if(!sameCycle&&(!b||b.flexible!==true||b.kind==='savingsTransfer'))throw Error('Skip This Cycle is only available for bills explicitly configured as flexible payments. It does not satisfy a required payment.');if(typeof reason!=='string'||!reason.trim())throw Error('Enter why this flexible cycle is being skipped.');const c=sameCycle?old.cycle:cycleFor(d,billId,due,id);return {id:id||undefined,type:'billSkip',billId,billName:b?.name||old?.billName||'Archived flexible bill',date:day,amount:0,reason:reason.trim(),flexibleAtSkip:true,cycle:{due:c.due,anchor:c.anchor,frequency:c.frequency,scheduleId:c.scheduleId,amount:c.amount}};}
 
 function readBackup(text,purgedIds=[]){const incoming=JSON.parse(text),payload=typeof incoming?.['week-by-week-v01']==='string'?JSON.parse(incoming['week-by-week-v01']):incoming;return validate(migrate(suppressPurged(payload,purgedIds)));}
-const api={readBackup,entryCategories,suppressPurged,permanentlyDelete,historyEntries,transactionEffects,funds,cardNames,cashBacking,matchingPaydays,upcomingBills,makeSkip,deletable,deleteTransaction,restoreTransaction,cycleGroups,scheduledBills,cycleFor,scheduleKey,beforeData,ordered,stateBefore,percentages,suggestFunds,warnings,deletePayday,restorePayday,fundBalance,fundHistory,empty,money,advance,total,free,apply,replay,needs,validate,migrate,setup,cashFlow,totals};if(typeof module!=='undefined')module.exports=api;else root.Budget=api;
+const api={shortfallFunds,fundDisplay,makeFundRebalance,readBackup,entryCategories,suppressPurged,permanentlyDelete,historyEntries,transactionEffects,funds,cardNames,cashBacking,matchingPaydays,upcomingBills,makeSkip,deletable,deleteTransaction,restoreTransaction,cycleGroups,scheduledBills,cycleFor,scheduleKey,beforeData,ordered,stateBefore,percentages,suggestFunds,warnings,deletePayday,restorePayday,fundBalance,fundHistory,empty,money,advance,total,free,apply,replay,needs,validate,migrate,setup,cashFlow,totals};if(typeof module!=='undefined')module.exports=api;else root.Budget=api;
 })(typeof window!=='undefined'?window:globalThis);
