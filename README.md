@@ -40,3 +40,5 @@ If corrupt data prevents launch, close Alloc and first copy the entire records f
 Use Node 24, npm ci, and npm test. npm start uses an isolated WeekByWeekBudget-Development folder. Test installers require BUDGET_TEST_ROOT or an embedded test destination; release builds ignore test-import environment variables and reject test-profile metadata in package audits. Never test against real financial records.
 
 See RELEASE.md, SECURITY.md, TESTING.md, and V1-READINESS.md. The dependency lockfile is retained; V1.0 introduces no dependency changes.
+
+Quick Add purchases and weekly spending limits (V1.1.0): the dashboard provides amount-first entry, remembered payment/category choices, editable favorites, weekly allowance comparisons, historical week review, and recent purchases. Limits reset without rollover and never allocate or move money. The original Purchase form remains available. See [QUICK-ADD-TESTING.md](QUICK-ADD-TESTING.md) for accounting rules and pre-release validation.

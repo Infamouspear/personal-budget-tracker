@@ -10,3 +10,4 @@ button.card{text-align:left;display:block;width:100%;font-size:15px;cursor:point
 .update-notification{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;margin-bottom:16px;background:#edf3e9;border:1px solid #bdcdb5;border-radius:8px}.update-notification[hidden]{display:none}.update-notification span{flex:1;min-width:180px}.update-release-notes{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;max-height:220px;overflow:auto;padding:12px;background:#f4f5ef;border-radius:6px}
 
 .card .fund-shortfall,.fund-shortfall{color:#a1392b;font-size:12px;line-height:1.5;font-weight:600}
+#spendingPanel #weeklyLimits{margin-top:16px}#spendingWeek{max-width:190px;display:block}#quickCategories{margin:14px 0}#quickCategories [aria-pressed=true]{background:#285443;color:white}#quickForm input[name=amount]{font-size:28px}#quickWarning{color:#93691e;font-size:13px}.actions{flex-wrap:wrap}#spendingDialog h3{margin-top:26px}

@@ -18,7 +18,7 @@ app.on('second-instance',()=>{if(win){if(win.isMinimized())win.restore();win.foc
 app.whenReady().then(()=>{
  try{store=new BudgetStore(path.join(stableData,'records'));}catch(e){dialog.showErrorBox('Budget data needs recovery',e.message+'\n\nData folder: '+path.join(stableData,'records'));app.quit();return;}
  if(testRoot&&process.env.BUDGET_TEST_IMPORT){const fixture=require('node:fs').readFileSync(process.env.BUDGET_TEST_IMPORT,'utf8');store.set('week-by-week-v01',fixture);}
- const assets=new Set(['index.html','app.js','engine.js','style.css','desktop-ui.js']);
+ const assets=new Set(['index.html','app.js','engine.js','style.css','desktop-ui.js','spending-ui.js']);
  protocol.handle('budget',async request=>{const u=new URL(request.url),asset=u.pathname.slice(1);if(u.hostname!=='app'||request.method!=='GET'||!assets.has(asset))return new Response('Not found',{status:404});const response=await net.fetch(pathToFileURL(path.join(__dirname,'../app',asset)).href);const headers=new Headers(response.headers);headers.set('Content-Security-Policy',"default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; font-src 'self'; form-action 'none'; base-uri 'none'; frame-ancestors 'none'");headers.set('X-Content-Type-Options','nosniff');return new Response(response.body,{status:response.status,headers});});
  session.defaultSession.setPermissionRequestHandler((_wc,_p,cb)=>cb(false));session.defaultSession.setPermissionCheckHandler(()=>false);
  win=new BrowserWindow({width:1180,height:860,minWidth:650,minHeight:500,title:'Alloc',show:false,webPreferences:{preload:path.join(__dirname,'preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true,webSecurity:true,spellcheck:false,devTools:!app.isPackaged}});
